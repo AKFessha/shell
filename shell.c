@@ -50,5 +50,14 @@ void terminal()
             exit(0);
         }
 
+        char *inputToken = strtok(input, " '\t' \n | < > & ;");
+        if (inputToken != NULL)
+        {
+            while (inputToken != NULL)
+            {
+                printf("\"%s\"\n", inputToken);
+                inputToken = strtok(NULL, " '\t' \n | < > & ;");
+            }
+        }
     }
 }
