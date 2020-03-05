@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #define MAX 512
 
 void welcome();
@@ -84,10 +85,10 @@ void externalCommand(char *command[])
     else if (c_pid > 0)
     {
 
-        if (pid = wait(&status) < 0)
-        {
-            perror("error: wait failed");
-            _exit(1);
-        }
+        if (pid = wait(&status)) < 0)
+            {
+                perror("error: wait failed");
+                _exit(1);
+            }
     }
 }
