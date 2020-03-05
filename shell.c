@@ -6,6 +6,7 @@
 
 void welcome();
 void terminal();
+void externalCommand(char *command[]);
 
 int main(void)
 {
@@ -58,6 +59,35 @@ void terminal()
                 printf("\"%s\"\n", inputToken);
                 inputToken = strtok(NULL, " '\t' \n | < > & ;");
             }
+        }
+    }
+}
+
+void externalCommand(char *command[])
+{
+    pid_t c_pid, pid;
+    int status;
+
+    c_pid = fork();
+
+    if (c_pid == -1)
+    {
+        printf("fork failed");
+        _exit(1);
+    }
+    if (c_pid == 0)
+    {
+        execvp(command[0], command);
+        perror(command[0]);
+        _exit(1);
+    }
+    else if (c_pid > 0)
+    {
+
+        if (pid = wait(&status) < 0)
+        {
+            perror("error: wait failed");
+            _exit(1);
         }
     }
 }
