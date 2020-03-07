@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+
 #define MAX 512
 
 void welcome();
@@ -38,6 +39,10 @@ void terminal()
 
             printf("Error: too many characters.\n");
             input[MAX] = '\n';
+            char c;
+            while ((c = getchar()) == '\n' && c != EOF)
+            {
+            };
             printf("> ");
             if (fgets(input, 514, stdin) == NULL)
             {
@@ -85,10 +90,10 @@ void externalCommand(char *command[])
     else if (c_pid > 0)
     {
 
-        if (pid = wait(&status)) < 0)
-            {
-                perror("error: wait failed");
-                _exit(1);
-            }
+        if ((pid = wait(&status)) < 0)
+        {
+            perror("error: wait failed");
+            _exit(1);
+        }
     }
 }
