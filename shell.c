@@ -10,6 +10,7 @@ void welcome();
 void init();
 void terminal(char *initalPATH);
 void externalCommand(char *command[]);
+void exitShell(char *initalPATH);
 
 int main(void)
 {
@@ -108,4 +109,15 @@ void externalCommand(char *command[])
             _exit(1);
         }
     }
+}
+
+void exitShell(char *initalPATH)
+{
+    printf("\nCurrent path: %s\n", getenv("PATH"));
+    setenv("PATH", PATH, 1);
+    printf("\n");
+    printf("Restored path to: %s\n\n", getenv("PATH"));
+    printf("Exiting...\n");
+    printf("\n");
+    exit(0);
 }
