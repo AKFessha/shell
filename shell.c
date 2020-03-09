@@ -87,13 +87,14 @@ void terminal(char *initalPATH)
             }
             systemInput[index] = NULL;
             char *builtIn[] = {"getpath", "setpath"};
-            if(!strcmp(systemInput[0],builtIn[0]) || !strcmp(systemInput[0],builtIn[1])){
-               // internalCommand(systemInput);
+            if (!strcmp(systemInput[0], builtIn[0]) || !strcmp(systemInput[0], builtIn[1]))
+            {
+                internalCommand(systemInput);
             }
-            else{
+            else
+            {
                 externalCommand(systemInput);
             }
-
         }
     }
 }
@@ -124,6 +125,27 @@ void externalCommand(char *command[])
             perror("error: wait failed");
             _exit(1);
         }
+    }
+}
+void internalCommand(char *command[])
+{
+    if (strcmp(command[0], "getpath") == 0 && command[1] == NULL)
+    {
+        printf("$ Current Path: %s\n", getenv("PATH"));
+    }
+    else if (strcmp(command[0], "getpath") == 0 && command[1] != NULL)
+    {
+        printf("Error: No such path\n");
+    }
+
+    if (strcmp(command[0], "setpath") == 0 && command[1] != NULL)
+    {
+        setenv("PATH", command[1], 1);
+        printf("$ Path Set To: %s\n", getenv("PATH"));
+    }
+    else if (strcmp(command[0], "setpath") == 0 && command[1] == NULL)
+    {
+        printf("Error: No path provided\n");
     }
 }
 
