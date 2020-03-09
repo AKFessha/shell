@@ -8,10 +8,10 @@
 
 void welcome();
 void init();
-void terminal(char *initalPATH);
+void terminal(char *initialPATH);
 void externalCommand(char *command[]);
 void internalCommand(char *command[]);
-void exitShell(char *initalPATH);
+void exitShell(char *PATH);
 
 int main(void)
 {
@@ -28,7 +28,7 @@ void welcome()
 
 void init()
 {
-    char *initalPATH = getenv("PATH");
+    char *initialPATH = getenv("PATH");
     chdir(getenv("HOME"));
     char c[1024];
     printf("Current Directory: %s\n", getcwd(c, sizeof(c)));
@@ -36,7 +36,7 @@ void init()
     printf("Current Path:  %s\n\n", initialPATH);
     terminal(initialPATH);
 }
-void terminal(char *initalPATH)
+void terminal(char *initialPATH)
 {
     while (1)
     {
@@ -46,7 +46,7 @@ void terminal(char *initalPATH)
         if (fgets(input, 514, stdin) == NULL)
         {
             printf("\n");
-            exitShell(initalPATH);
+            exitShell(initialPATH);
             exit(0);
         }
         while (input[MAX] != '\n')
@@ -62,7 +62,7 @@ void terminal(char *initalPATH)
             if (fgets(input, 514, stdin) == NULL)
             {
                 printf("\n");
-                exitShell(initalPATH);
+                exitShell(initialPATH);
                 exit(0);
             }
         }
@@ -70,7 +70,7 @@ void terminal(char *initalPATH)
         if (strcmp(input, "exit\n") == 0)
         {
             printf("\n");
-            exitShell(initalPATH);
+            exitShell(initialPATH);
             exit(0);
         }
 
@@ -149,7 +149,7 @@ void internalCommand(char *command[])
     }
 }
 
-void exitShell(char *initalPATH)
+void exitShell(char *PATH)
 {
     printf("\nCurrent path: %s\n", getenv("PATH"));
     setenv("PATH", PATH, 1);
