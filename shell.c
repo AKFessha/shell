@@ -10,6 +10,7 @@ void welcome();
 void init();
 void terminal(char *initalPATH);
 void externalCommand(char *command[]);
+void internalCommand(char *command[]);
 void exitShell(char *initalPATH);
 
 int main(void)
@@ -45,6 +46,7 @@ void terminal(char *initalPATH)
         if (fgets(input, 514, stdin) == NULL)
         {
             printf("\n");
+            exitShell(initalPATH);
             exit(0);
         }
         while (input[MAX] != '\n')
@@ -60,6 +62,7 @@ void terminal(char *initalPATH)
             if (fgets(input, 514, stdin) == NULL)
             {
                 printf("\n");
+                exitShell(initalPATH);
                 exit(0);
             }
         }
@@ -67,17 +70,30 @@ void terminal(char *initalPATH)
         if (strcmp(input, "exit\n") == 0)
         {
             printf("\n");
+            exitShell(initalPATH);
             exit(0);
         }
 
+        char *systemInput[50];
         char *inputToken = strtok(input, " '\t' \n | < > & ;");
+        int index = 0;
         if (inputToken != NULL)
         {
             while (inputToken != NULL)
             {
-                printf("\"%s\"\n", inputToken);
+                systemInput[index] = inputToken;
+                index++;
                 inputToken = strtok(NULL, " '\t' \n | < > & ;");
             }
+            systemInput[index] = NULL;
+            char *builtIn[] = {"getpath", "setpath"};
+            if(!strcmp(systemInput[0],builtIn[0]) || !strcmp(systemInput[0],builtIn[1])){
+               // internalCommand(systemInput);
+            }
+            else{
+                externalCommand(systemInput);
+            }
+
         }
     }
 }
