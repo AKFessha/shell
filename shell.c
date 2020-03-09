@@ -7,13 +7,14 @@
 #define MAX 512
 
 void welcome();
-void terminal();
+void init();
+void terminal(char *initalPATH);
 void externalCommand(char *command[]);
 
 int main(void)
 {
     welcome();
-    terminal();
+    init();
 }
 
 void welcome()
@@ -22,7 +23,18 @@ void welcome()
     printf("          MY SHELL       \n");
     printf("-------------------------\n");
 }
-void terminal()
+
+void init()
+{
+    char *initalPATH = getenv("PATH");
+    chdir(getenv("HOME"));
+    char c[1024];
+    printf("Current Directory: %s\n", getcwd(c, sizeof(c)));
+    printf("\n");
+    printf("Current Path:  %s\n\n", initialPATH);
+    terminal(initialPATH);
+}
+void terminal(char *initalPATH)
 {
     while (1)
     {
