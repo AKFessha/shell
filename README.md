@@ -1,3 +1,3 @@
 # SHELL
 
-A C program for a simple shell, to excute basic commands.
+A C program for a simple shell, to excute some internal and external commands such as ls, cd, setpath, getpath, alias etc.
