@@ -55,7 +55,7 @@ void terminal(char *initialPATH)
             printf("Error: too many characters.\n");
             input[MAX] = '\n';
             char c;
-            while ((c = getchar()) == '\n' && c != EOF)
+            while ((c = getchar()) != '\n' && c != EOF)
             {
             };
             printf("> ");
@@ -73,6 +73,11 @@ void terminal(char *initialPATH)
             exitShell(initialPATH);
             exit(0);
         }
+        if (strcmp(input, "exit\n") == 0)
+        {
+            exitShell(initialPATH);
+            exit(0);
+        }
 
         char *systemInput[50];
         char *inputToken = strtok(input, " '\t' \n | < > & ;");
@@ -86,7 +91,7 @@ void terminal(char *initialPATH)
                 inputToken = strtok(NULL, " '\t' \n | < > & ;");
             }
             systemInput[index] = NULL;
-            char *builtIn[] = {"getpath", "setpath"};
+            char *builtIn[] = {"cd", "getpath", "setpath"};
             if (!strcmp(systemInput[0], builtIn[0]) || !strcmp(systemInput[0], builtIn[1]))
             {
                 internalCommand(systemInput);
