@@ -7,10 +7,15 @@
 #define MAX 512
 
 void welcome();
+
 void init();
+
 void terminal(char *initialPATH);
+
 void externalCommand(char *command[]);
+
 void internalCommand(char *command[]);
+
 void exitShell(char *PATH);
 
 int main(void)
@@ -21,9 +26,9 @@ int main(void)
 
 void welcome()
 {
-    printf("-------------------------\n");
-    printf("          MY SHELL       \n");
-    printf("-------------------------\n");
+    printf("------------------\n");
+    printf("   Simple Shell   \n");
+    printf("------------------\n\n");
 }
 
 void init()
@@ -31,48 +36,43 @@ void init()
     char *initialPATH = getenv("PATH");
     chdir(getenv("HOME"));
     char c[1024];
-    printf("Current Directory: %s\n", getcwd(c, sizeof(c)));
+    printf("HOME PATH  %s\n", getcwd(c, sizeof(c)));
     printf("\n");
-    printf("Current Path:  %s\n\n", initialPATH);
+    printf("PATH PATH  %s\n", initialPATH);
     terminal(initialPATH);
 }
+
 void terminal(char *initialPATH)
 {
+
     while (1)
     {
         char input[513] = {'\t'};
+
         printf("> ");
         input[MAX] = '\n';
         if (fgets(input, 514, stdin) == NULL)
         {
-            printf("\n");
             exitShell(initialPATH);
             exit(0);
         }
+
         while (input[MAX] != '\n')
         {
-
             printf("Error: too many characters.\n");
             input[MAX] = '\n';
             char c;
             while ((c = getchar()) != '\n' && c != EOF)
             {
             };
-            printf("> ");
+            printf(">");
             if (fgets(input, 514, stdin) == NULL)
             {
-                printf("\n");
                 exitShell(initialPATH);
                 exit(0);
             }
         }
 
-        if (strcmp(input, "exit\n") == 0)
-        {
-            printf("\n");
-            exitShell(initialPATH);
-            exit(0);
-        }
         if (strcmp(input, "exit\n") == 0)
         {
             exitShell(initialPATH);
@@ -81,6 +81,7 @@ void terminal(char *initialPATH)
 
         char *systemInput[50];
         char *inputToken = strtok(input, " '\t' \n | < > & ;");
+
         int index = 0;
         if (inputToken != NULL)
         {
@@ -91,9 +92,14 @@ void terminal(char *initialPATH)
                 inputToken = strtok(NULL, " '\t' \n | < > & ;");
             }
             systemInput[index] = NULL;
+
             char *builtIn[] = {"cd", "getpath", "setpath"};
-            if (!strcmp(systemInput[0], builtIn[0]) || !strcmp(systemInput[0], builtIn[1]))
+
+            if (!strcmp(systemInput[0], builtIn[0]) ||
+                !strcmp(systemInput[0], builtIn[1]) ||
+                !strcmp(systemInput[0], builtIn[2]))
             {
+
                 internalCommand(systemInput);
             }
             else
@@ -113,9 +119,10 @@ void externalCommand(char *command[])
 
     if (c_pid == -1)
     {
-        printf("fork failed");
+        perror("Error: fork failed");
         _exit(1);
     }
+
     if (c_pid == 0)
     {
         execvp(command[0], command);
@@ -124,14 +131,14 @@ void externalCommand(char *command[])
     }
     else if (c_pid > 0)
     {
-
         if ((pid = wait(&status)) < 0)
         {
-            perror("error: wait failed");
+            perror("Error: wait failed");
             _exit(1);
         }
     }
 }
+
 void internalCommand(char *command[])
 {
     if (strcmp(command[0], "cd") == 0)
@@ -141,7 +148,7 @@ void internalCommand(char *command[])
             int i = chdir(command[1]);
             if (i < 0)
             {
-                printf("Directory could not be changed\n");
+                printf("Directory could not be changes\n");
             }
             else
             {
@@ -154,7 +161,7 @@ void internalCommand(char *command[])
             int i = chdir(getenv("HOME"));
             if (i < 0)
             {
-                printf("Directory could not be changed\n");
+                printf("Directory could not be changes\n");
             }
             else
             {
@@ -173,7 +180,7 @@ void internalCommand(char *command[])
         printf("Error: No such path\n");
     }
 
-    if (strcmp(command[0], "setpath") == 0 && command[1] != NULL)
+    if (strcmp(command[0], "setpath") == 0 && command[1] != NULL && command[2] == NULL)
     {
         setenv("PATH", command[1], 1);
         printf("$ Path Set To: %s\n", getenv("PATH"));
@@ -181,6 +188,10 @@ void internalCommand(char *command[])
     else if (strcmp(command[0], "setpath") == 0 && command[1] == NULL)
     {
         printf("Error: No path provided\n");
+    }
+    else if (strcmp(command[0], "setpath") == 0 && command[1] != NULL && command[2] != NULL)
+    {
+        printf("Error: Too many parameters\n");
     }
 }
 
