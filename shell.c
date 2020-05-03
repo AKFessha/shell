@@ -12,11 +12,29 @@ void init();
 
 void terminal(char *initialPATH);
 
+void tokenizer(char input[], char *History[]);
+
+void saveHistory(char input[], char *History[]);
+
+void commandHub(char *systemInput[], char *History[]);
+
 void externalCommand(char *command[]);
 
-void internalCommand(char *command[]);
+void cd(char *command[]);
 
-void exitShell(char *PATH);
+void getpath(char *command[]);
+
+void setpath(char *command[]);
+
+void history(char *History[]);
+
+void lastCommand(char *History[]);
+
+void relativeCommand(char *command[], char *History[]);
+
+void specificCommand(char *command[], char *History[]);
+
+void exitShell(char *PATH, char *History[]);
 
 int main(void)
 {
