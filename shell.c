@@ -157,6 +157,52 @@ void tokenizer(char input[], char *History[])
     }
 }
 
+void saveHistory(char input[], char *History[])
+{
+
+    if (strcmp(History[19], "\0"))
+    { //if the history is full
+        for (int i = 0; i < 20; i++)
+        {
+            strcpy(History[i], History[i + 1]);
+        }
+
+        free(History[20]);
+        int i = 0;
+
+        while (input[i] != '\n')
+        {
+            i++;
+        }
+
+        input[i] = '\0';
+
+        char *value = malloc(MAX);
+        value = strcat(value, input);
+
+        strcpy(History[19], value);
+    }
+
+    else if (!strcmp(History[19], "\0"))
+    { // if the history is not full
+        int i = 0;
+        while (input[i] != '\n')
+        {
+            i++;
+        }
+        input[i] = '\0';
+
+        char *value = malloc(MAX);
+        value = strcat(value, input);
+        int j = 0;
+        while (strcmp(History[j], "\0"))
+        {
+            j++;
+        }
+        strcpy(History[j], value);
+    }
+}
+
 void externalCommand(char *command[])
 {
     pid_t c_pid, pid;
