@@ -304,6 +304,19 @@ void cd(char *command[])
     }
 }
 
+void getpath(char *command[])
+{
+
+    if (strcmp(command[0], "getpath") == 0 && command[1] == NULL)
+    {
+        printf("$ Current Path: %s\n", getenv("PATH"));
+    }
+    else if (strcmp(command[0], "getpath") == 0 && command[1] != NULL)
+    {
+        printf("Error: No such path\n");
+    }
+}
+
 void internalCommand(char *command[])
 {
     if (strcmp(command[0], "cd") == 0)
