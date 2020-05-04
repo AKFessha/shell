@@ -317,6 +317,24 @@ void getpath(char *command[])
     }
 }
 
+void setpath(char *command[])
+{
+    if (strcmp(command[0], "setpath") == 0 && command[1] != NULL && command[2] != NULL)
+    {
+        printf("Error: Too many parameters\n");
+    }
+
+    else if (strcmp(command[0], "setpath") == 0 && command[1] != NULL)
+    {
+        setenv("PATH", command[1], 1);
+        printf("$ Path Set To: %s\n", getenv("PATH"));
+    }
+    else if (strcmp(command[0], "setpath") == 0 && command[1] == NULL)
+    {
+        printf("Error: No path provided\n");
+    }
+}
+
 void internalCommand(char *command[])
 {
     if (strcmp(command[0], "cd") == 0)
