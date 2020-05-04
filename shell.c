@@ -269,6 +269,41 @@ void externalCommand(char *command[])
     }
 }
 
+void cd(char *command[])
+{
+
+    if (command[1] != NULL && *command[1] != '~' && command[2] == NULL)
+    {
+        int i = chdir(command[1]);
+        if (i < 0)
+        {
+            printf("Could not change directory to: %s. Not directory\n", command[1]);
+        }
+        else
+        {
+            char cwd[1024];
+            printf("%s\n", getcwd(cwd, sizeof(cwd)));
+        }
+    }
+    else if (command[1] != NULL && *command[1] != '~' && command[2] != NULL)
+    {
+        printf("Directory could not be changed. Too many parameters\n");
+    }
+    else
+    {
+        int i = chdir(getenv("HOME"));
+        if (i < 0)
+        {
+            printf("Directory could not be changes\n");
+        }
+        else
+        {
+            char cwd[1024];
+            printf("%s\n", getcwd(cwd, sizeof(cwd)));
+        }
+    }
+}
+
 void internalCommand(char *command[])
 {
     if (strcmp(command[0], "cd") == 0)
