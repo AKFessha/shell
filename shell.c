@@ -409,9 +409,12 @@ void internalCommand(char *command[])
         printf("Error: Too many parameters\n");
     }
 }
-
-void exitShell(char *PATH)
+void exitShell(char *PATH, char *History[])
 {
+    for (int i = 0; i < 21; i++)
+    {
+        free(History[i]);
+    }
     printf("\nCurrent path: %s\n", getenv("PATH"));
     setenv("PATH", PATH, 1);
     printf("\n");
