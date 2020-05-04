@@ -203,6 +203,43 @@ void saveHistory(char input[], char *History[])
     }
 }
 
+void commandHub(char *systemInput[], char *History[])
+{
+
+    if (!strcmp(systemInput[0], "cd"))
+    {
+        cd(systemInput);
+    }
+    else if (!strcmp(systemInput[0], "getpath"))
+    {
+        getpath(systemInput);
+    }
+    else if (!strcmp(systemInput[0], "setpath"))
+    {
+        setpath(systemInput);
+    }
+    else if (!strcmp(systemInput[0], "history"))
+    {
+        history(History);
+    }
+    else if (!strcmp(systemInput[0], "!!"))
+    {
+        lastCommand(History);
+    }
+    else if (!strncmp(systemInput[0], "!-", 2))
+    {
+        relativeCommand(systemInput, History);
+    }
+    else if (!strncmp(systemInput[0], "!", 1))
+    {
+        specificCommand(systemInput, History);
+    }
+    else
+    {
+        externalCommand(systemInput);
+    }
+}
+
 void externalCommand(char *command[])
 {
     pid_t c_pid, pid;
