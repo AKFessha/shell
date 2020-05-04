@@ -52,26 +52,38 @@ void welcome()
 void init()
 {
     char *initialPATH = getenv("PATH");
+
     chdir(getenv("HOME"));
     char c[1024];
-    printf("HOME PATH  %s\n", getcwd(c, sizeof(c)));
+    printf("HOME: %s\n", getcwd(c, sizeof(c)));
     printf("\n");
-    printf("PATH PATH  %s\n", initialPATH);
+    printf("PATH: %s\n\n", initialPATH);
+
     terminal(initialPATH);
 }
 
 void terminal(char *initialPATH)
 {
 
+    char *History[21];
+    char *emptyCheck = malloc(1);
+    strcat(emptyCheck, "\0");
+    for (int i = 0; i < 21; i++)
+    {
+        History[i] = malloc(MAX);
+        strcpy(History[i], emptyCheck);
+    }
+
     while (1)
     {
-        char input[513] = {'\t'};
 
+        char input[513] = {'\t'};
         printf("> ");
         input[MAX] = '\n';
         if (fgets(input, 514, stdin) == NULL)
         {
-            exitShell(initialPATH);
+            printf("%s\n", initialPATH);
+            exitShell(initialPATH, History);
             exit(0);
         }
 
@@ -86,44 +98,20 @@ void terminal(char *initialPATH)
             printf(">");
             if (fgets(input, 514, stdin) == NULL)
             {
-                exitShell(initialPATH);
+
+                exitShell(initialPATH, History);
                 exit(0);
             }
         }
 
         if (strcmp(input, "exit\n") == 0)
         {
-            exitShell(initialPATH);
+            exitShell(initialPATH, History);
             exit(0);
         }
-
-        char *systemInput[50];
-        char *inputToken = strtok(input, " '\t' \n | < > & ;");
-
-        int index = 0;
-        if (inputToken != NULL)
+        if (input[0] != '\n' && input[0] != ' ')
         {
-            while (inputToken != NULL)
-            {
-                systemInput[index] = inputToken;
-                index++;
-                inputToken = strtok(NULL, " '\t' \n | < > & ;");
-            }
-            systemInput[index] = NULL;
-
-            char *builtIn[] = {"cd", "getpath", "setpath"};
-
-            if (!strcmp(systemInput[0], builtIn[0]) ||
-                !strcmp(systemInput[0], builtIn[1]) ||
-                !strcmp(systemInput[0], builtIn[2]))
-            {
-
-                internalCommand(systemInput);
-            }
-            else
-            {
-                externalCommand(systemInput);
-            }
+            tokenizer(input, History);
         }
     }
 }
