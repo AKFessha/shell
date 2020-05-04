@@ -334,6 +334,25 @@ void setpath(char *command[])
         printf("Error: No path provided\n");
     }
 }
+void history(char *History[])
+{
+
+    if (!strcmp(History[0], "\0"))
+    {
+        printf("No commands entered yet\n");
+    }
+    else
+    {
+        for (int i = 0; i < 20; i++)
+        {
+
+            if (strcmp(History[i], "\0"))
+            {
+                printf("%d : %s \n", (i + 1), History[i]);
+            }
+        }
+    }
+}
 
 void internalCommand(char *command[])
 {
