@@ -116,6 +116,47 @@ void terminal(char *initialPATH)
     }
 }
 
+void tokenizer(char input[], char *History[])
+{
+
+    char *systemInput[50];
+    char toSave[MAX];
+
+    strcpy(toSave, input);
+
+    char *inputToken = strtok(input, " '\t' \n | < > & ;");
+
+    int index = 0;
+    if (inputToken != NULL)
+    {
+        while (inputToken != NULL)
+        {
+            systemInput[index] = inputToken;
+            index++;
+            inputToken = strtok(NULL, " '\t' \n | < > & ;");
+        }
+    }
+    systemInput[index] = NULL;
+
+    if (strcmp(systemInput[0], "!!") == 0)
+    {
+        commandHub(systemInput, History);
+    }
+
+    else if (strncmp(systemInput[0], "!-", 2) == 0 ||
+             strncmp(systemInput[0], "!", 1) == 0)
+    {
+        commandHub(systemInput, History);
+    }
+
+    else
+    {
+        saveHistory(toSave, History);
+
+        commandHub(systemInput, History);
+    }
+}
+
 void externalCommand(char *command[])
 {
     pid_t c_pid, pid;
