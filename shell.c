@@ -354,6 +354,42 @@ void history(char *History[])
     }
 }
 
+void lastCommand(char *History[])
+{
+    int x = 0;
+    if (!strcmp(History[0], "\0"))
+    {
+        printf("Error, no commands in history to execute \n");
+    }
+    else
+    {
+        char input[MAX];
+
+        int j = 0;
+        while (strcmp(History[j], "\0"))
+        {
+            j++;
+        }
+        strcpy(input, History[j - 1]);
+        char *systemInput[50];
+        char *inputToken = strtok(input, " '\t' \n | < > & ;");
+
+        int index = 0;
+        if (inputToken != NULL)
+        {
+            while (inputToken != NULL)
+            {
+                systemInput[index] = inputToken;
+                index++;
+                inputToken = strtok(NULL, " '\t' \n | < > & ;");
+            }
+        }
+        systemInput[index] = NULL;
+
+        commandHub(systemInput, History);
+    }
+}
+
 void exitShell(char *PATH, char *History[])
 {
     for (int i = 0; i < 21; i++)
