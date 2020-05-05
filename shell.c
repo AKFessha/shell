@@ -431,6 +431,51 @@ void specificCommand(char *command[], char *History[])
     }
 }
 
+void relativeCommand(char *command[], char *History[])
+{
+    char *value = strtok(command[0], "!-");
+    if (value != NULL)
+    {
+        int x = atoi(value);
+        if (x < 1 || x > 20)
+        {
+            printf("Error : index entered out of range \n");
+        }
+        else
+        {
+            int j = 1;
+            while (strcmp(History[j], "\0"))
+            {
+                j++;
+            }
+            if (!strcmp(History[j - x], "\0") || j - x < 0)
+            {
+                printf("Error, no commands in history to execute \n");
+            }
+            else
+            {
+                char input[MAX];
+                strcpy(input, History[j - x]);
+                char *systemInput[50];
+                char *inputToken = strtok(input, " '\t' \n | < > & ;");
+
+                int index = 0;
+                if (inputToken != NULL)
+                {
+                    while (inputToken != NULL)
+                    {
+                        systemInput[index] = inputToken;
+                        index++;
+                        inputToken = strtok(NULL, " '\t' \n | < > & ;");
+                    }
+                }
+                systemInput[index] = NULL;
+                commandHub(systemInput, History);
+            }
+        }
+    }
+}
+
 void exitShell(char *PATH, char *History[])
 {
     for (int i = 0; i < 21; i++)
