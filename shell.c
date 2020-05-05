@@ -354,61 +354,6 @@ void history(char *History[])
     }
 }
 
-void internalCommand(char *command[])
-{
-    if (strcmp(command[0], "cd") == 0)
-    {
-        if (command[1] != NULL && *command[1] != '~')
-        {
-            int i = chdir(command[1]);
-            if (i < 0)
-            {
-                printf("Directory could not be changes\n");
-            }
-            else
-            {
-                char cwd[1024];
-                printf("%s\n", getcwd(cwd, sizeof(cwd)));
-            }
-        }
-        else
-        {
-            int i = chdir(getenv("HOME"));
-            if (i < 0)
-            {
-                printf("Directory could not be changes\n");
-            }
-            else
-            {
-                char cwd[1024];
-                printf("%s\n", getcwd(cwd, sizeof(cwd)));
-            }
-        }
-    }
-
-    if (strcmp(command[0], "getpath") == 0 && command[1] == NULL)
-    {
-        printf("$ Current Path: %s\n", getenv("PATH"));
-    }
-    else if (strcmp(command[0], "getpath") == 0 && command[1] != NULL)
-    {
-        printf("Error: No such path\n");
-    }
-
-    if (strcmp(command[0], "setpath") == 0 && command[1] != NULL && command[2] == NULL)
-    {
-        setenv("PATH", command[1], 1);
-        printf("$ Path Set To: %s\n", getenv("PATH"));
-    }
-    else if (strcmp(command[0], "setpath") == 0 && command[1] == NULL)
-    {
-        printf("Error: No path provided\n");
-    }
-    else if (strcmp(command[0], "setpath") == 0 && command[1] != NULL && command[2] != NULL)
-    {
-        printf("Error: Too many parameters\n");
-    }
-}
 void exitShell(char *PATH, char *History[])
 {
     for (int i = 0; i < 21; i++)
