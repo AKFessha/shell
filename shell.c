@@ -34,7 +34,11 @@ void relativeCommand(char *command[], char *History[]);
 
 void specificCommand(char *command[], char *History[]);
 
-void exitShell(char *PATH, char *History[]);
+void save_command(char *History[], char *initialDIR);
+
+void load_commandHistory(char *initialDIR, char *History[]);
+
+void exitShell(char *initialPATH, char *initialDIR, char *History[]);
 
 int main(void)
 {
