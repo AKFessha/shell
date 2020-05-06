@@ -66,6 +66,40 @@ void init()
     terminal(initialPATH);
 }
 
+void load_commandHistory(char *initialDIR, char *History[])
+{
+
+    FILE *fp;
+    chdir(initialDIR);
+    fp = fopen("history.txt", "r");
+
+    if (fp == NULL)
+    {
+        printf("...Load File not found...\n");
+    }
+    else
+    {
+
+        char buffer[MAX];
+        int count = 0;
+
+        while (fgets(buffer, MAX, fp) != NULL)
+        {
+            int length = strlen(buffer);
+
+            buffer[length] = '\0';
+            char val[MAX];
+
+            strtok(buffer, "\n");
+            strcpy(val, buffer);
+            strcpy(History[count], val);
+            count++;
+        }
+        fclose(fp);
+    }
+    chdir(getenv("HOME"));
+}
+
 void terminal(char *initialPATH)
 {
 
