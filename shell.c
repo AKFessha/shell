@@ -105,12 +105,16 @@ void terminal(char *initialPATH)
 
     char *History[21];
     char *emptyCheck = malloc(1);
+
     strcat(emptyCheck, "\0");
+
     for (int i = 0; i < 21; i++)
     {
         History[i] = malloc(MAX);
         strcpy(History[i], emptyCheck);
     }
+
+    load_commandHistory(initialDIR, History);
 
     while (1)
     {
@@ -121,7 +125,7 @@ void terminal(char *initialPATH)
         if (fgets(input, 514, stdin) == NULL)
         {
             printf("%s\n", initialPATH);
-            exitShell(initialPATH, History);
+            exitShell(initialPATH, initialDIR, History);
             exit(0);
         }
 
@@ -137,14 +141,14 @@ void terminal(char *initialPATH)
             if (fgets(input, 514, stdin) == NULL)
             {
 
-                exitShell(initialPATH, History);
+                exitShell(initialPATH, initialDIR, History);
                 exit(0);
             }
         }
 
         if (strcmp(input, "exit\n") == 0)
         {
-            exitShell(initialPATH, History);
+            exitShell(initialPATH, initialDIR, History);
             exit(0);
         }
         if (input[0] != '\n' && input[0] != ' ')
@@ -513,17 +517,49 @@ void relativeCommand(char *command[], char *History[])
         }
     }
 }
-
-void exitShell(char *PATH, char *History[])
+void save_command(char *History[], char *initialDIR)
 {
+    FILE *fp;
+    chdir(initialDIR);
+    fp = fopen("history.txt", "w+");
+    if (fp == NULL)
+    {
+        printf("Save File not found");
+    }
+    else
+    {
+        for (int i = 0; i <= 19; i++)
+        {
+            if (strcmp(History[i], "\0") != 0)
+            {
+                fprintf(fp, "%s", History[i]);
+                if (strcmp(History[i + 1], "\0") != 0)
+                {
+                    fputs("\n", fp);
+                }
+            }
+        }
+        fclose(fp);
+    }
+}
+
+void exitShell(char *initialPATH, char *initialDIR, char *History[])
+{
+    printf("\nCurrent path: %s\n", getenv("PATH"));
+
+    setenv("PATH", initialPATH, 1);
+
+    printf("\n");
+    printf("Restored path to: %s\n\n", getenv("PATH"));
+    printf("Saving History..\n");
+
+    save_command(History, initialDIR);
+
     for (int i = 0; i < 21; i++)
     {
         free(History[i]);
     }
-    printf("\nCurrent path: %s\n", getenv("PATH"));
-    setenv("PATH", PATH, 1);
-    printf("\n");
-    printf("Restored path to: %s\n\n", getenv("PATH"));
+
     printf("Exiting...\n");
     printf("\n");
     exit(0);
