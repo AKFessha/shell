@@ -10,7 +10,7 @@ void welcome();
 
 void init();
 
-void terminal(char *initialDIR, char *initialPATH);
+void terminal(char *initialPATH, char *initialDIR);
 
 void tokenizer(char input[], char *History[]);
 
@@ -105,9 +105,8 @@ void load_commandHistory(char *initialDIR, char *History[])
     chdir(getenv("HOME"));
 }
 
-void terminal(char *initialDIR, char *initialPATH)
+void terminal(char *initialPATH, char *initialDIR)
 {
-
     char *History[21];
     char *emptyCheck = malloc(1);
 
@@ -123,7 +122,6 @@ void terminal(char *initialDIR, char *initialPATH)
 
     while (1)
     {
-
         char input[513] = {'\t'};
         printf("> ");
         input[MAX] = '\n';
@@ -133,7 +131,6 @@ void terminal(char *initialDIR, char *initialPATH)
             exitShell(initialPATH, initialDIR, History);
             exit(0);
         }
-
         while (input[MAX] != '\n')
         {
             printf("Error: too many characters.\n");
@@ -145,7 +142,6 @@ void terminal(char *initialDIR, char *initialPATH)
             printf(">");
             if (fgets(input, 514, stdin) == NULL)
             {
-
                 exitShell(initialPATH, initialDIR, History);
                 exit(0);
             }
@@ -153,9 +149,11 @@ void terminal(char *initialDIR, char *initialPATH)
 
         if (strcmp(input, "exit\n") == 0)
         {
+
             exitShell(initialPATH, initialDIR, History);
             exit(0);
         }
+
         if (input[0] != '\n' && input[0] != ' ')
         {
             tokenizer(input, History);
@@ -165,7 +163,6 @@ void terminal(char *initialDIR, char *initialPATH)
 
 void tokenizer(char input[], char *History[])
 {
-
     char *systemInput[50];
     char toSave[MAX];
 
@@ -183,6 +180,7 @@ void tokenizer(char input[], char *History[])
             inputToken = strtok(NULL, " '\t' \n | < > & ;");
         }
     }
+
     systemInput[index] = NULL;
 
     if (strcmp(systemInput[0], "!!") == 0)
@@ -190,8 +188,7 @@ void tokenizer(char input[], char *History[])
         commandHub(systemInput, History);
     }
 
-    else if (strncmp(systemInput[0], "!-", 2) == 0 ||
-             strncmp(systemInput[0], "!", 1) == 0)
+    else if (strncmp(systemInput[0], "!-", 2) == 0 || strncmp(systemInput[0], "!", 1) == 0)
     {
         commandHub(systemInput, History);
     }
@@ -199,31 +196,25 @@ void tokenizer(char input[], char *History[])
     else
     {
         saveHistory(toSave, History);
-
         commandHub(systemInput, History);
     }
 }
 
 void saveHistory(char input[], char *History[])
 {
-
     if (strcmp(History[19], "\0"))
     { //if the history is full
         for (int i = 0; i < 20; i++)
         {
             strcpy(History[i], History[i + 1]);
         }
-
         free(History[20]);
         int i = 0;
-
         while (input[i] != '\n')
         {
             i++;
         }
-
         input[i] = '\0';
-
         char *value = malloc(MAX);
         value = strcat(value, input);
 
@@ -257,30 +248,37 @@ void commandHub(char *systemInput[], char *History[])
     {
         cd(systemInput);
     }
+
     else if (!strcmp(systemInput[0], "getpath"))
     {
         getpath(systemInput);
     }
+
     else if (!strcmp(systemInput[0], "setpath"))
     {
         setpath(systemInput);
     }
+
     else if (!strcmp(systemInput[0], "history"))
     {
         history(History);
     }
+
     else if (!strcmp(systemInput[0], "!!"))
     {
         lastCommand(History);
     }
+
     else if (!strncmp(systemInput[0], "!-", 2))
     {
         relativeCommand(systemInput, History);
     }
+
     else if (!strncmp(systemInput[0], "!", 1))
     {
         specificCommand(systemInput, History);
     }
+
     else
     {
         externalCommand(systemInput);
@@ -318,13 +316,13 @@ void externalCommand(char *command[])
 
 void cd(char *command[])
 {
-
     if (command[1] != NULL && *command[1] != '~' && command[2] == NULL)
     {
         int i = chdir(command[1]);
         if (i < 0)
         {
-            printf("Could not change directory to: %s. Not directory\n", command[1]);
+            printf("Could not change directory to: %s. Not directory\n",
+                   command[1]);
         }
         else
         {
@@ -381,9 +379,9 @@ void setpath(char *command[])
         printf("Error: No path provided\n");
     }
 }
+
 void history(char *History[])
 {
-
     if (!strcmp(History[0], "\0"))
     {
         printf("No commands entered yet\n");
@@ -392,7 +390,6 @@ void history(char *History[])
     {
         for (int i = 0; i < 20; i++)
         {
-
             if (strcmp(History[i], "\0"))
             {
                 printf("%d : %s \n", (i + 1), History[i]);
@@ -411,12 +408,12 @@ void lastCommand(char *History[])
     else
     {
         char input[MAX];
-
         int j = 0;
         while (strcmp(History[j], "\0"))
         {
             j++;
         }
+
         strcpy(input, History[j - 1]);
         char *systemInput[50];
         char *inputToken = strtok(input, " '\t' \n | < > & ;");
@@ -432,17 +429,16 @@ void lastCommand(char *History[])
             }
         }
         systemInput[index] = NULL;
-
         commandHub(systemInput, History);
     }
 }
+
 void specificCommand(char *command[], char *History[])
 {
 
     char *value = strtok(command[0], "!");
     if (value != NULL)
     {
-        //ascii digits conversion
         int x = atoi(value);
         if (x < 1 || x > 20)
         {
@@ -454,6 +450,7 @@ void specificCommand(char *command[], char *History[])
             {
                 printf("Error, no commands in history to execute \n");
             }
+
             else
             {
                 char input[MAX];
@@ -480,6 +477,7 @@ void specificCommand(char *command[], char *History[])
 
 void relativeCommand(char *command[], char *History[])
 {
+
     char *value = strtok(command[0], "!-");
     if (value != NULL)
     {
