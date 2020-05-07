@@ -10,7 +10,7 @@ void welcome();
 
 void init();
 
-void terminal(char *initialPATH);
+void terminal(char *initialDIR, char *initialPATH);
 
 void tokenizer(char input[], char *History[]);
 
@@ -55,15 +55,20 @@ void welcome()
 
 void init()
 {
+    char d[1024];
+    char *initialDIR = getcwd(d, sizeof(d));
+
+    printf("Current Directory: %s\n\n", initialDIR);
+
     char *initialPATH = getenv("PATH");
 
     chdir(getenv("HOME"));
     char c[1024];
-    printf("HOME: %s\n", getcwd(c, sizeof(c)));
+    printf("Home Directory: %s\n", getcwd(c, sizeof(c)));
     printf("\n");
-    printf("PATH: %s\n\n", initialPATH);
+    printf("Path: %s\n\n", initialPATH);
 
-    terminal(initialPATH);
+    terminal(initialPATH, initialDIR);
 }
 
 void load_commandHistory(char *initialDIR, char *History[])
@@ -100,7 +105,7 @@ void load_commandHistory(char *initialDIR, char *History[])
     chdir(getenv("HOME"));
 }
 
-void terminal(char *initialPATH)
+void terminal(char *initialDIR, char *initialPATH)
 {
 
     char *History[21];
@@ -517,6 +522,7 @@ void relativeCommand(char *command[], char *History[])
         }
     }
 }
+
 void save_command(char *History[], char *initialDIR)
 {
     FILE *fp;
