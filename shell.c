@@ -75,16 +75,84 @@ void init()
     terminal(initialPATH, initialDIR);
 }
 
+void terminal(char *initialPATH, char *initialDIR)
+{
+    char *History[21];
+    char *aliasArray[10][2];
+
+    char *emptyCheck = malloc(1);
+
+    strcat(emptyCheck, "\0");
+
+    for (int i = 0; i < 21; i++)
+    {
+        History[i] = malloc(MAX);
+        strcpy(History[i], emptyCheck);
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        aliasArray[i][0] = malloc(MAX);
+        aliasArray[i][1] = malloc(MAX);
+        strcpy(aliasArray[i][0], emptyCheck);
+        strcpy(aliasArray[i][1], emptyCheck);
+    }
+
+    load_commandHistory(initialDIR, History);
+
+    while (1)
+    {
+        char input[513] = {'\t'};
+        printf("> ");
+        input[MAX] = '\n';
+        if (fgets(input, 514, stdin) == NULL)
+        {
+
+            printf("%s\n", initialPATH);
+            exitShell(aliasArray, initialPATH, initialDIR, History);
+            exit(0);
+        }
+        while (input[MAX] != '\n')
+        {
+            printf("Error: too many characters.\n ");
+            input[MAX] = '\n';
+            char c;
+            while ((c = getchar()) != '\n' && c != EOF)
+            {
+            };
+
+            printf(">");
+            if (fgets(input, 514, stdin) == NULL)
+            {
+                exitShell(aliasArray, initialPATH, initialDIR, History);
+                exit(0);
+            }
+        }
+
+        if (strcmp(input, "exit\n") == 0)
+        {
+
+            exitShell(aliasArray, initialPATH, initialDIR, History);
+            exit(0);
+        }
+
+        if (input[0] != '\n' && input[0] != ' ')
+        {
+            tokenizer(aliasArray, input, History);
+        }
+    }
+}
+
 void load_commandHistory(char *initialDIR, char *History[])
 {
 
     FILE *fp;
     chdir(initialDIR);
-    fp = fopen("history.txt", "r");
+    fp = fopen(".hist_list", "r");
 
     if (fp == NULL)
     {
-        printf("...Load File not found...\n");
+        printf("...History file not found...\n");
     }
     else
     {
@@ -109,63 +177,7 @@ void load_commandHistory(char *initialDIR, char *History[])
     chdir(getenv("HOME"));
 }
 
-void terminal(char *initialPATH, char *initialDIR)
-{
-    char *History[21];
-    char *emptyCheck = malloc(1);
-
-    strcat(emptyCheck, "\0");
-
-    for (int i = 0; i < 21; i++)
-    {
-        History[i] = malloc(MAX);
-        strcpy(History[i], emptyCheck);
-    }
-
-    load_commandHistory(initialDIR, History);
-
-    while (1)
-    {
-        char input[513] = {'\t'};
-        printf("> ");
-        input[MAX] = '\n';
-        if (fgets(input, 514, stdin) == NULL)
-        {
-            printf("%s\n", initialPATH);
-            exitShell(initialPATH, initialDIR, History);
-            exit(0);
-        }
-        while (input[MAX] != '\n')
-        {
-            printf("Error: too many characters.\n");
-            input[MAX] = '\n';
-            char c;
-            while ((c = getchar()) != '\n' && c != EOF)
-            {
-            };
-            printf(">");
-            if (fgets(input, 514, stdin) == NULL)
-            {
-                exitShell(initialPATH, initialDIR, History);
-                exit(0);
-            }
-        }
-
-        if (strcmp(input, "exit\n") == 0)
-        {
-
-            exitShell(initialPATH, initialDIR, History);
-            exit(0);
-        }
-
-        if (input[0] != '\n' && input[0] != ' ')
-        {
-            tokenizer(input, History);
-        }
-    }
-}
-
-void tokenizer(char input[], char *History[])
+void tokenizer(char *aliasArray[10][2], char input[], char *History[])
 {
     char *systemInput[50];
     char toSave[MAX];
@@ -189,18 +201,18 @@ void tokenizer(char input[], char *History[])
 
     if (strcmp(systemInput[0], "!!") == 0)
     {
-        commandHub(systemInput, History);
+        commandHub(aliasArray, systemInput, History);
     }
 
     else if (strncmp(systemInput[0], "!-", 2) == 0 || strncmp(systemInput[0], "!", 1) == 0)
     {
-        commandHub(systemInput, History);
+        commandHub(aliasArray, systemInput, History);
     }
 
     else
     {
         saveHistory(toSave, History);
-        commandHub(systemInput, History);
+        commandHub(aliasArray, systemInput, History);
     }
 }
 
@@ -245,8 +257,19 @@ void saveHistory(char input[], char *History[])
     }
 }
 
-void commandHub(char *systemInput[], char *History[])
+void commandHub(char *aliasArray[10][2], char *systemInput[], char *History[])
 {
+
+    for (int i = 0; i < 10; i++)
+    {
+        if (!strcmp(systemInput[0], aliasArray[i][0]))
+        {
+            char holder[MAX];
+            strcpy(holder, aliasArray[i][1]);
+            tokenizer(aliasArray, holder, History);
+            return;
+        }
+    }
 
     if (!strcmp(systemInput[0], "cd"))
     {
@@ -268,19 +291,29 @@ void commandHub(char *systemInput[], char *History[])
         history(History);
     }
 
+    else if (!strcmp(systemInput[0], "alias"))
+    {
+        alias(aliasArray, systemInput);
+    }
+
+    else if (!strcmp(systemInput[0], "unalias"))
+    {
+        unalias(aliasArray, systemInput);
+    }
+
     else if (!strcmp(systemInput[0], "!!"))
     {
-        lastCommand(History);
+        lastCommand(aliasArray, History);
     }
 
     else if (!strncmp(systemInput[0], "!-", 2))
     {
-        relativeCommand(systemInput, History);
+        relativeCommand(aliasArray, systemInput, History);
     }
 
     else if (!strncmp(systemInput[0], "!", 1))
     {
-        specificCommand(systemInput, History);
+        specificCommand(aliasArray, systemInput, History);
     }
 
     else
@@ -402,7 +435,7 @@ void history(char *History[])
     }
 }
 
-void lastCommand(char *History[])
+void lastCommand(char *aliasArray[10][2], char *History[])
 {
     int x = 0;
     if (!strcmp(History[0], "\0"))
@@ -433,11 +466,11 @@ void lastCommand(char *History[])
             }
         }
         systemInput[index] = NULL;
-        commandHub(systemInput, History);
+        commandHub(aliasArray, systemInput, History);
     }
 }
 
-void specificCommand(char *command[], char *History[])
+void specificCommand(char *aliasArray[10][2], char *command[], char *History[])
 {
 
     char *value = strtok(command[0], "!");
@@ -473,13 +506,13 @@ void specificCommand(char *command[], char *History[])
                     }
                 }
                 systemInput[index] = NULL;
-                commandHub(systemInput, History);
+                commandHub(aliasArray, systemInput, History);
             }
         }
     }
 }
 
-void relativeCommand(char *command[], char *History[])
+void relativeCommand(char *aliasArray[10][2], char *command[], char *History[])
 {
 
     char *value = strtok(command[0], "!-");
@@ -519,7 +552,7 @@ void relativeCommand(char *command[], char *History[])
                     }
                 }
                 systemInput[index] = NULL;
-                commandHub(systemInput, History);
+                commandHub(aliasArray, systemInput, History);
             }
         }
     }
@@ -529,7 +562,7 @@ void save_command(char *History[], char *initialDIR)
 {
     FILE *fp;
     chdir(initialDIR);
-    fp = fopen("history.txt", "w+");
+    fp = fopen(".hist_list", "w+");
     if (fp == NULL)
     {
         printf("Save File not found");
@@ -551,7 +584,95 @@ void save_command(char *History[], char *initialDIR)
     }
 }
 
-void exitShell(char *initialPATH, char *initialDIR, char *History[])
+void alias(char *aliasArray[10][2], char *command[])
+{
+    if (command[1] == NULL)
+    {
+        int j = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            if (strcmp(aliasArray[i][0], "\0") && strcmp(aliasArray[i][1], "\0"))
+            {
+                printf("Alias: \"%s\" Command: \"%s\"\n", aliasArray[i][0], aliasArray[i][1]);
+                j++;
+            }
+        }
+        if (j == 0)
+        {
+            printf("No aliases set\n");
+        }
+        return;
+    }
+
+    else if (command[2] == NULL)
+    {
+        printf("No command set\n");
+        return;
+    }
+
+    if (!strcmp(command[1], "alias"))
+    {
+        printf("Error: cannot alias 'alias'");
+        printf("\n");
+        return;
+    }
+
+    char *temp = malloc(MAX);
+    strcat(temp, command[2]);
+    int i = 3;
+    while (command[i] != NULL)
+    {
+        strcat(temp, " ");
+        strcat(temp, command[i]);
+        i++;
+    }
+
+    char *aliasName = malloc(MAX);
+    char *aliasCommand = malloc(MAX);
+    aliasName = strcat(aliasName, command[1]);
+    aliasCommand = strcat(aliasCommand, temp);
+
+    for (int j = 0; j < 10; j++)
+    {
+        if (!strcmp(aliasArray[j][0], "\0"))
+        {
+            strcpy(aliasArray[j][0], aliasName);
+            strcpy(aliasArray[j][1], aliasCommand);
+            printf("Created alias \"%s\" for the command: \"%s\"\n", command[1], aliasCommand);
+            return;
+        }
+        else if (!strcmp(aliasArray[j][0], aliasName))
+        {
+            printf("Changed alias \"%s\" from the command: \"%s\"\n", command[1], aliasArray[j][1]);
+            strcpy(aliasArray[j][1], aliasCommand);
+            printf("---to the command: %s\n", aliasCommand);
+
+            return;
+        }
+    }
+    printf("Alias list is full\n");
+}
+
+void unalias(char *aliasArray[10][2], char *command[])
+{
+    int j = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        if (!strcmp(command[1], aliasArray[i][0]))
+        {
+            printf("Unliased command: \"%s\" from alias \"%s\"\n", aliasArray[i][1], command[1]);
+            strcpy(aliasArray[i][0], "\0");
+            strcpy(aliasArray[i][1], "\0");
+            j = 1;
+        }
+    }
+    if (j == 0)
+    {
+        printf("Alias %s does not exist.\n", command[1]);
+    }
+}
+
+void exitShell(char *aliasArray[10][2], char *initialPATH, char *initialDIR, char *History[])
 {
     printf("\nCurrent path: %s\n", getenv("PATH"));
 
@@ -566,6 +687,12 @@ void exitShell(char *initialPATH, char *initialDIR, char *History[])
     for (int i = 0; i < 21; i++)
     {
         free(History[i]);
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        free(aliasArray[i][0]);
+        free(aliasArray[i][1]);
     }
 
     printf("Exiting...\n");
