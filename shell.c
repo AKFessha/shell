@@ -12,11 +12,13 @@ void init();
 
 void terminal(char *initialPATH, char *initialDIR);
 
-void tokenizer(char input[], char *History[]);
+void load_commandHistory(char *initialDIR, char *History[]);
+
+void tokenizer(char *aliasArray[10][2], char input[], char *History[]);
 
 void saveHistory(char input[], char *History[]);
 
-void commandHub(char *systemInput[], char *History[]);
+void commandHub(char *aliasArray[10][2], char *systemInput[], char *History[]);
 
 void externalCommand(char *command[]);
 
@@ -28,17 +30,19 @@ void setpath(char *command[]);
 
 void history(char *History[]);
 
-void lastCommand(char *History[]);
+void lastCommand(char *aliasArray[10][2], char *History[]);
 
-void relativeCommand(char *command[], char *History[]);
+void relativeCommand(char *aliasArray[10][2], char *command[], char *History[]);
 
-void specificCommand(char *command[], char *History[]);
+void specificCommand(char *aliasArray[10][2], char *command[], char *History[]);
 
 void save_command(char *History[], char *initialDIR);
 
-void load_commandHistory(char *initialDIR, char *History[]);
+void exitShell(char *aliasArray[10][2], char *initialPATH, char *initialDIR, char *History[]);
 
-void exitShell(char *initialPATH, char *initialDIR, char *History[]);
+void alias(char *aliasArray[10][2], char *command[]);
+
+void unalias(char *aliasArray[10][2], char *command[]);
 
 int main(void)
 {
