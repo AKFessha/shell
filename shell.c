@@ -14,13 +14,13 @@ void terminal(char *initialPATH, char *initialDIR);
 
 void load_commandHistory(char *initialDIR, char *History[]);
 
-void tokenizer(char *aliasArray[10][2], char input[], char *History[]);
+void load_Aliases(char *initialDIR, char *aliasArray[11][2]);
+
+void tokenizer(char *aliasArray[11][2], char input[], char *History[]);
 
 void saveHistory(char input[], char *History[]);
 
-void commandHub(char *aliasArray[10][2], char *systemInput[], char *History[]);
-
-void externalCommand(char *command[]);
+void commandHub(char *aliasArray[11][2], char *systemInput[], char *History[]);
 
 void cd(char *command[]);
 
@@ -30,19 +30,23 @@ void setpath(char *command[]);
 
 void history(char *History[]);
 
-void lastCommand(char *aliasArray[10][2], char *History[]);
+void alias(char *aliasArray[11][2], char *command[]);
 
-void relativeCommand(char *aliasArray[10][2], char *command[], char *History[]);
+void unalias(char *aliasArray[11][2], char *command[]);
 
-void specificCommand(char *aliasArray[10][2], char *command[], char *History[]);
+void lastCommand(char *aliasArray[11][2], char *History[]);
+
+void relativeCommand(char *aliasArray[11][2], char *command[], char *History[]);
+
+void specificCommand(char *aliasArray[11][2], char *command[], char *History[]);
+
+void externalCommand(char *command[]);
 
 void save_command(char *History[], char *initialDIR);
 
-void exitShell(char *aliasArray[10][2], char *initialPATH, char *initialDIR, char *History[]);
+void save_alias(char *aliasArray[11][2], char *initialDIR);
 
-void alias(char *aliasArray[10][2], char *command[]);
-
-void unalias(char *aliasArray[10][2], char *command[]);
+void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, char *History[]);
 
 int main(void)
 {
@@ -78,7 +82,7 @@ void init()
 void terminal(char *initialPATH, char *initialDIR)
 {
     char *History[21];
-    char *aliasArray[10][2];
+    char *aliasArray[11][2];
 
     char *emptyCheck = malloc(1);
 
@@ -90,15 +94,17 @@ void terminal(char *initialPATH, char *initialDIR)
         strcpy(History[i], emptyCheck);
     }
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 11; i++)
     {
         aliasArray[i][0] = malloc(MAX);
         aliasArray[i][1] = malloc(MAX);
+
         strcpy(aliasArray[i][0], emptyCheck);
         strcpy(aliasArray[i][1], emptyCheck);
     }
 
     load_commandHistory(initialDIR, History);
+    load_Aliases(initialDIR, aliasArray);
 
     while (1)
     {
@@ -149,7 +155,6 @@ void load_commandHistory(char *initialDIR, char *History[])
     FILE *fp;
     chdir(initialDIR);
     fp = fopen(".hist_list", "r");
-
     if (fp == NULL)
     {
         printf("...History file not found...\n");
@@ -177,7 +182,49 @@ void load_commandHistory(char *initialDIR, char *History[])
     chdir(getenv("HOME"));
 }
 
-void tokenizer(char *aliasArray[10][2], char input[], char *History[])
+void load_Aliases(char *initialDIR, char *aliasArray[11][2])
+{
+
+    FILE *fp;
+    chdir(initialDIR);
+    fp = fopen(".aliases", "r");
+
+    if (fp == NULL)
+    {
+        printf("...Alias file not found...\n");
+    }
+    else
+    {
+
+        char buffer[MAX];
+        int count = 0;
+
+        while (fgets(buffer, MAX, fp) != NULL)
+        {
+            int length = strlen(buffer);
+
+            buffer[length] = '\0';
+            char name[length];
+            char command[length];
+
+            char *input;
+
+            input = strtok(buffer, " ");
+            strcpy(name, input);
+            strcpy(aliasArray[count][0], name);
+
+            input = strtok(NULL, "\n");
+            strcpy(command, input);
+            strcpy(aliasArray[count][1], command);
+            count++;
+        }
+        fclose(fp);
+    }
+
+    chdir(getenv("HOME"));
+}
+
+void tokenizer(char *aliasArray[11][2], char input[], char *History[])
 {
     char *systemInput[50];
     char toSave[MAX];
@@ -257,7 +304,7 @@ void saveHistory(char input[], char *History[])
     }
 }
 
-void commandHub(char *aliasArray[10][2], char *systemInput[], char *History[])
+void commandHub(char *aliasArray[11][2], char *systemInput[], char *History[])
 {
 
     for (int i = 0; i < 10; i++)
@@ -319,35 +366,6 @@ void commandHub(char *aliasArray[10][2], char *systemInput[], char *History[])
     else
     {
         externalCommand(systemInput);
-    }
-}
-
-void externalCommand(char *command[])
-{
-    pid_t c_pid, pid;
-    int status;
-
-    c_pid = fork();
-
-    if (c_pid == -1)
-    {
-        perror("Error: fork failed");
-        _exit(1);
-    }
-
-    if (c_pid == 0)
-    {
-        execvp(command[0], command);
-        perror(command[0]);
-        _exit(1);
-    }
-    else if (c_pid > 0)
-    {
-        if ((pid = wait(&status)) < 0)
-        {
-            perror("Error: wait failed");
-            _exit(1);
-        }
     }
 }
 
@@ -435,8 +453,105 @@ void history(char *History[])
     }
 }
 
-void lastCommand(char *aliasArray[10][2], char *History[])
+void alias(char *aliasArray[11][2], char *command[])
 {
+    if (command[1] == NULL)
+    {
+        int j = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            if (strcmp(aliasArray[i][0], "\0") && strcmp(aliasArray[i][1], "\0"))
+            {
+                printf("Alias: \"%s\" Command: \"%s\"\n", aliasArray[i][0], aliasArray[i][1]);
+                j++;
+            }
+        }
+        if (j == 0)
+        {
+            printf("No aliases set\n");
+        }
+        return;
+    }
+
+    else if (command[2] == NULL)
+    {
+        printf("No command set\n");
+        return;
+    }
+
+    if (!strcmp(command[1], "alias"))
+    {
+        printf("Error: cannot alias 'alias'");
+        printf("\n");
+        return;
+    }
+
+    char *temp = malloc(MAX);
+    strcat(temp, command[2]);
+    for (int i = 0; i < 10; i++)
+    {
+        if (!strcmp(temp, aliasArray[i][0]) && !strcmp(command[1], aliasArray[i][1]))
+        {
+            printf("Cannot create alias, it creates an infinite loop\n");
+            return;
+        }
+    }
+    int i = 3;
+    while (command[i] != NULL)
+    {
+        strcat(temp, " ");
+        strcat(temp, command[i]);
+        i++;
+    }
+
+    char *aliasName = malloc(MAX);
+    char *aliasCommand = malloc(MAX);
+    aliasName = strcat(aliasName, command[1]);
+    aliasCommand = strcat(aliasCommand, temp);
+
+    for (int j = 0; j < 10; j++)
+    {
+        if (!strcmp(aliasArray[j][0], "\0"))
+        {
+            strcpy(aliasArray[j][0], aliasName);
+            strcpy(aliasArray[j][1], aliasCommand);
+            printf("Created alias \"%s\" for the command: \"%s\"\n", command[1], aliasCommand);
+            return;
+        }
+        else if (!strcmp(aliasArray[j][0], aliasName))
+        {
+            printf("Changed alias \"%s\" from the command: \"%s\"\n", command[1], aliasArray[j][1]);
+            strcpy(aliasArray[j][1], aliasCommand);
+            printf("---to the command: %s\n", aliasCommand);
+
+            return;
+        }
+    }
+    printf("Alias list is full\n");
+}
+
+void unalias(char *aliasArray[11][2], char *command[])
+{
+    int j = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        if (!strcmp(command[1], aliasArray[i][0]))
+        {
+            printf("Unliased command: \"%s\" from alias \"%s\"\n", aliasArray[i][1], command[1]);
+            strcpy(aliasArray[i][0], "\0");
+            strcpy(aliasArray[i][1], "\0");
+            j = 1;
+        }
+    }
+    if (j == 0)
+    {
+        printf("Alias %s does not exist.\n", command[1]);
+    }
+}
+
+void lastCommand(char *aliasArray[11][2], char *History[])
+{
+
     int x = 0;
     if (!strcmp(History[0], "\0"))
     {
@@ -470,7 +585,7 @@ void lastCommand(char *aliasArray[10][2], char *History[])
     }
 }
 
-void specificCommand(char *aliasArray[10][2], char *command[], char *History[])
+void specificCommand(char *aliasArray[11][2], char *command[], char *History[])
 {
 
     char *value = strtok(command[0], "!");
@@ -512,7 +627,7 @@ void specificCommand(char *aliasArray[10][2], char *command[], char *History[])
     }
 }
 
-void relativeCommand(char *aliasArray[10][2], char *command[], char *History[])
+void relativeCommand(char *aliasArray[11][2], char *command[], char *History[])
 {
 
     char *value = strtok(command[0], "!-");
@@ -558,6 +673,35 @@ void relativeCommand(char *aliasArray[10][2], char *command[], char *History[])
     }
 }
 
+void externalCommand(char *command[])
+{
+    pid_t c_pid, pid;
+    int status;
+
+    c_pid = fork();
+
+    if (c_pid == -1)
+    {
+        perror("Error: fork failed");
+        _exit(1);
+    }
+
+    if (c_pid == 0)
+    {
+        execvp(command[0], command);
+        perror(command[0]);
+        _exit(1);
+    }
+    else if (c_pid > 0)
+    {
+        if ((pid = wait(&status)) < 0)
+        {
+            perror("Error: wait failed");
+            _exit(1);
+        }
+    }
+}
+
 void save_command(char *History[], char *initialDIR)
 {
     FILE *fp;
@@ -565,11 +709,11 @@ void save_command(char *History[], char *initialDIR)
     fp = fopen(".hist_list", "w+");
     if (fp == NULL)
     {
-        printf("Save File not found");
+        printf("Save file not found");
     }
     else
     {
-        for (int i = 0; i <= 19; i++)
+        for (int i = 0; i < 20; i++)
         {
             if (strcmp(History[i], "\0") != 0)
             {
@@ -584,95 +728,33 @@ void save_command(char *History[], char *initialDIR)
     }
 }
 
-void alias(char *aliasArray[10][2], char *command[])
+void save_alias(char *aliasArray[11][2], char *initialDIR)
 {
-    if (command[1] == NULL)
+    FILE *fp;
+    chdir(initialDIR);
+    fp = fopen(".aliases", "w+");
+    if (fp == NULL)
     {
-        int j = 0;
-        for (int i = 0; i < 10; i++)
+        printf("Save file not found");
+    }
+    else
+    {
+        for (int i = 0; i < 11; i++)
         {
-            if (strcmp(aliasArray[i][0], "\0") && strcmp(aliasArray[i][1], "\0"))
+            if (strcmp(aliasArray[i][0], "\0") != 0)
             {
-                printf("Alias: \"%s\" Command: \"%s\"\n", aliasArray[i][0], aliasArray[i][1]);
-                j++;
+                fprintf(fp, "%s %s", aliasArray[i][0], aliasArray[i][1]);
+                if (strcmp(aliasArray[i + 1][0], "\0") != 0)
+                {
+                    fputs("\n", fp);
+                }
             }
         }
-        if (j == 0)
-        {
-            printf("No aliases set\n");
-        }
-        return;
-    }
-
-    else if (command[2] == NULL)
-    {
-        printf("No command set\n");
-        return;
-    }
-
-    if (!strcmp(command[1], "alias"))
-    {
-        printf("Error: cannot alias 'alias'");
-        printf("\n");
-        return;
-    }
-
-    char *temp = malloc(MAX);
-    strcat(temp, command[2]);
-    int i = 3;
-    while (command[i] != NULL)
-    {
-        strcat(temp, " ");
-        strcat(temp, command[i]);
-        i++;
-    }
-
-    char *aliasName = malloc(MAX);
-    char *aliasCommand = malloc(MAX);
-    aliasName = strcat(aliasName, command[1]);
-    aliasCommand = strcat(aliasCommand, temp);
-
-    for (int j = 0; j < 10; j++)
-    {
-        if (!strcmp(aliasArray[j][0], "\0"))
-        {
-            strcpy(aliasArray[j][0], aliasName);
-            strcpy(aliasArray[j][1], aliasCommand);
-            printf("Created alias \"%s\" for the command: \"%s\"\n", command[1], aliasCommand);
-            return;
-        }
-        else if (!strcmp(aliasArray[j][0], aliasName))
-        {
-            printf("Changed alias \"%s\" from the command: \"%s\"\n", command[1], aliasArray[j][1]);
-            strcpy(aliasArray[j][1], aliasCommand);
-            printf("---to the command: %s\n", aliasCommand);
-
-            return;
-        }
-    }
-    printf("Alias list is full\n");
-}
-
-void unalias(char *aliasArray[10][2], char *command[])
-{
-    int j = 0;
-    for (int i = 0; i < 10; i++)
-    {
-        if (!strcmp(command[1], aliasArray[i][0]))
-        {
-            printf("Unliased command: \"%s\" from alias \"%s\"\n", aliasArray[i][1], command[1]);
-            strcpy(aliasArray[i][0], "\0");
-            strcpy(aliasArray[i][1], "\0");
-            j = 1;
-        }
-    }
-    if (j == 0)
-    {
-        printf("Alias %s does not exist.\n", command[1]);
+        fclose(fp);
     }
 }
 
-void exitShell(char *aliasArray[10][2], char *initialPATH, char *initialDIR, char *History[])
+void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, char *History[])
 {
     printf("\nCurrent path: %s\n", getenv("PATH"));
 
@@ -683,13 +765,14 @@ void exitShell(char *aliasArray[10][2], char *initialPATH, char *initialDIR, cha
     printf("Saving History..\n");
 
     save_command(History, initialDIR);
+    save_alias(aliasArray, initialDIR);
 
     for (int i = 0; i < 21; i++)
     {
         free(History[i]);
     }
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 11; i++)
     {
         free(aliasArray[i][0]);
         free(aliasArray[i][1]);
