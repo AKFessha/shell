@@ -9,7 +9,7 @@
 void welcome();
 
 void init();
-
+void Check_Circular(char *aliasArray[11][2], char *command[]);
 void terminal(char *initialPATH, char *initialDIR);
 
 void load_commandHistory(char *initialDIR, char *History[]);
@@ -47,6 +47,8 @@ void save_command(char *History[], char *initialDIR);
 void save_alias(char *aliasArray[11][2], char *initialDIR);
 
 void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, char *History[]);
+
+char *checkIfInAlias(char *aliasArray[11][2], char *inputToken);
 
 int main(void)
 {
