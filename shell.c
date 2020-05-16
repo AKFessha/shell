@@ -9,7 +9,9 @@
 void welcome();
 
 void init();
+
 void Check_Circular(char *aliasArray[11][2], char *command[]);
+
 void terminal(char *initialPATH, char *initialDIR);
 
 void load_commandHistory(char *initialDIR, char *History[]);
@@ -240,7 +242,7 @@ void tokenizer(char *aliasArray[11][2], char input[], char *History[])
     {
         while (inputToken != NULL)
         {
-            systemInput[index] = inputToken;
+            systemInput[index] = checkIfInAlias(aliasArray, inputToken);
             index++;
             inputToken = strtok(NULL, " '\t' \n | < > & ;");
         }
@@ -518,6 +520,8 @@ void alias(char *aliasArray[11][2], char *command[])
             strcpy(aliasArray[j][0], aliasName);
             strcpy(aliasArray[j][1], aliasCommand);
             printf("Created alias \"%s\" for the command: \"%s\"\n", command[1], aliasCommand);
+            Check_Circular(aliasArray, command);
+
             return;
         }
         else if (!strcmp(aliasArray[j][0], aliasName))
@@ -783,4 +787,67 @@ void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, cha
     printf("Exiting...\n");
     printf("\n");
     exit(0);
+}
+
+void Check_Circular(char *aliasArray[11][2], char *command[])
+{
+    //for each element of lias 2d array
+    for (int i = 0; i < 10 && (strcmp(aliasArray[i][0], "\0") != 0); i++)
+    {
+        //start of chain with is argument of alias i , chain value is right
+        char *To_check = malloc(sizeof(char));
+        strcpy(To_check, aliasArray[i][0]);
+
+        char *Chain_Value = malloc(sizeof(char));
+        strcpy(Chain_Value, aliasArray[i][1]);
+
+        int end_of_chain = 0;
+
+        while (!end_of_chain)
+        {
+            //searching if chain_value is an alias for To_check
+            for (int j = 0; j < 10 && (strcmp(aliasArray[j][0], "\0") != 0); j++)
+            {
+                //checking if chain value is an alias fo another
+                if (!strcmp(aliasArray[j][0], Chain_Value))
+                {
+                    //if the current chain value is an alias for To_check,then there is a circular dependency
+                    if (!strcmp(aliasArray[j][1], To_check))
+                    {
+                        printf("Circular dependency detected for %s , cancelling alias\n", To_check);
+                        unalias(aliasArray, command);
+                        free(To_check);
+                        free(Chain_Value);
+                        return;
+                    }
+
+                    //if not then set the aliased value as the new Chain_Value
+                    strcpy(Chain_Value, aliasArray[j][1]);
+                }
+            }
+            //if the chain value is not an alias , then its the end of the chain
+
+            end_of_chain = 1;
+        }
+        free(To_check);
+        free(Chain_Value);
+    }
+
+    printf("no circular dependency \n");
+}
+
+char *checkIfInAlias(char *aliasArray[11][2], char *inputToken)
+{
+
+    for (int i = 0; i < 10; i++)
+    {
+        if (strcmp(aliasArray[i][0], "\0") != 0)
+        {
+            if (strcmp(aliasArray[i][0], inputToken) == 0)
+            {
+                return aliasArray[i][1];
+            }
+        }
+    }
+    return inputToken;
 }
