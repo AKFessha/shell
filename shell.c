@@ -129,55 +129,66 @@ void terminal(char *initialPATH, char *initialDIR)
     load_commandHistory(initialDIR, History);
     load_Aliases(initialDIR, aliasArray);
 
+    //infinite loop that continues to take input until it reads in exit command (in which it breaks from loop and exits)
     while (1)
     {
+
         char input[513] = {'\t'};
+        //Display prompt
         printf("> ");
-        input[MAX] = '\n';
+        input[MAX - 1] = '\n';
+
         if (fgets(input, 514, stdin) == NULL)
         {
 
-            printf("%s\n", initialPATH);
+            printf("\n");
             exitShell(aliasArray, initialPATH, initialDIR, History);
             exit(0);
         }
-        while (input[MAX] != '\n')
+
+        //If input buffer contains too many characters
+        while (input[MAX - 1] != '\n')
         {
-            printf("Error: too many characters.\n ");
-            input[MAX] = '\n';
+            printf("Error: too many characters.\n");
+            input[MAX - 1] = '\n';
             char c;
+            printf("Press enter to continue...");
             while ((c = getchar()) != '\n' && c != EOF)
             {
             };
-
-            printf(">");
+            printf("> ");
             if (fgets(input, 514, stdin) == NULL)
             {
+                printf("\n");
                 exitShell(aliasArray, initialPATH, initialDIR, History);
                 exit(0);
             }
         }
-
+        //if exit command invoked
         if (strcmp(input, "exit\n") == 0)
         {
-
+            printf("\n");
             exitShell(aliasArray, initialPATH, initialDIR, History);
             exit(0);
         }
-
+        //tokenizes the input if it is not empty
         if (input[0] != '\n' && input[0] != ' ')
         {
+
             tokenizer(aliasArray, input, History);
         }
     }
 }
 
+//function to load the command history from file
 void load_commandHistory(char *initialDIR, char *History[])
 {
 
     FILE *fp;
     chdir(initialDIR);
     fp = fopen(".hist_list", "r");
+
+    //if file does not exist , nothing happens
     if (fp == NULL)
     {
         printf("...History file not found...\n");
@@ -205,6 +216,7 @@ void load_commandHistory(char *initialDIR, char *History[])
     chdir(getenv("HOME"));
 }
 
+// function used to aliases from file
 void load_Aliases(char *initialDIR, char *aliasArray[11][2])
 {
 
@@ -212,6 +224,7 @@ void load_Aliases(char *initialDIR, char *aliasArray[11][2])
     chdir(initialDIR);
     fp = fopen(".aliases", "r");
 
+    //if file does not exist , nothing happens
     if (fp == NULL)
     {
         printf("...Alias file not found...\n");
@@ -246,7 +259,8 @@ void load_Aliases(char *initialDIR, char *aliasArray[11][2])
 
     chdir(getenv("HOME"));
 }
-
+//function that breaks the input into tokens based on whitespace and certain symbols
+//and sends input to correct method.
 void tokenizer(char *aliasArray[11][2], char input[], char *History[])
 {
     char *systemInput[50];
@@ -254,47 +268,60 @@ void tokenizer(char *aliasArray[11][2], char input[], char *History[])
 
     strcpy(toSave, input);
 
-    char *inputToken = strtok(input, " '\t' \n | < > & ;");
+    char *inputToken = strtok(input, " \t \n | < > & ;");
 
     int index = 0;
     if (inputToken != NULL)
     {
         while (inputToken != NULL)
         {
-            systemInput[index] = checkIfInAlias(aliasArray, inputToken);
+
+            systemInput[index] = inputToken;
             index++;
-            inputToken = strtok(NULL, " '\t' \n | < > & ;");
+            inputToken = strtok(NULL, " \t  \n | < > & ;");
         }
     }
-
     systemInput[index] = NULL;
 
-    if (strcmp(systemInput[0], "!!") == 0)
+    if (systemInput[0] == NULL)
     {
+        return;
+    }
+
+    if (checkIfInAlias(aliasArray, systemInput[0]) != 0)
+    {
+        saveHistory(toSave, History);
+        changeToAliasedCommand(aliasArray, systemInput, History);
+    }
+
+    else if (strcmp(systemInput[0], "!!") == 0)
+    {
+
         commandHub(aliasArray, systemInput, History);
     }
 
     else if (strncmp(systemInput[0], "!-", 2) == 0 || strncmp(systemInput[0], "!", 1) == 0)
     {
+
         commandHub(aliasArray, systemInput, History);
     }
 
     else
     {
         saveHistory(toSave, History);
-        commandHub(aliasArray, systemInput, History);
+        changeToAliasedCommand(aliasArray, systemInput, History);
     }
 }
-
+//Function to save the input to the command history
 void saveHistory(char input[], char *History[])
 {
     if (strcmp(History[19], "\0"))
     { //if the history is full
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 19; i++)
         {
             strcpy(History[i], History[i + 1]);
         }
-        free(History[20]);
+        free(History[19]);
         int i = 0;
         while (input[i] != '\n')
         {
@@ -327,21 +354,18 @@ void saveHistory(char input[], char *History[])
     }
 }
 
+//Function that handles input commands , by calling the relevant function to execute command or prints an error if input is invalid
+// like a hub, hence the name "commandHub"
 void commandHub(char *aliasArray[11][2], char *systemInput[], char *History[])
 {
 
-    for (int i = 0; i < 10; i++)
+    if (!strcmp(systemInput[0], "unalias"))
     {
-        if (!strcmp(systemInput[0], aliasArray[i][0]))
-        {
-            char holder[MAX];
-            strcpy(holder, aliasArray[i][1]);
-            tokenizer(aliasArray, holder, History);
-            return;
-        }
+        unalias(aliasArray, systemInput);
+        return;
     }
 
-    if (!strcmp(systemInput[0], "cd"))
+    else if (!strcmp(systemInput[0], "cd"))
     {
         cd(systemInput);
     }
@@ -358,7 +382,14 @@ void commandHub(char *aliasArray[11][2], char *systemInput[], char *History[])
 
     else if (!strcmp(systemInput[0], "history"))
     {
-        history(History);
+        if (systemInput[1] == NULL)
+        {
+            history(History);
+        }
+        else
+        {
+            printf("Error: History takes no parameter\n");
+        }
     }
 
     else if (!strcmp(systemInput[0], "alias"))
@@ -366,24 +397,43 @@ void commandHub(char *aliasArray[11][2], char *systemInput[], char *History[])
         alias(aliasArray, systemInput);
     }
 
-    else if (!strcmp(systemInput[0], "unalias"))
-    {
-        unalias(aliasArray, systemInput);
-    }
-
     else if (!strcmp(systemInput[0], "!!"))
     {
-        lastCommand(aliasArray, History);
+        if (systemInput[1] == NULL)
+        {
+            lastCommand(aliasArray, History);
+        }
+        else
+        {
+            printf("Error: !! takes no parameter\n");
+        }
     }
 
     else if (!strncmp(systemInput[0], "!-", 2))
     {
-        relativeCommand(aliasArray, systemInput, History);
+
+        if (systemInput[1] == NULL)
+        {
+            relativeCommand(aliasArray, systemInput, History);
+        }
+        else
+        {
+            printf("Error: !-<number> takes additional parameter\n");
+            printf("Error: than a number between 1 and 20\n");
+        }
     }
 
     else if (!strncmp(systemInput[0], "!", 1))
     {
-        specificCommand(aliasArray, systemInput, History);
+        if (systemInput[1] == NULL)
+        {
+            specificCommand(aliasArray, systemInput, History);
+        }
+        else
+        {
+            printf("Error: !<number> takes additional parameter\n");
+            printf("Error: than a number between 1 and 20\n");
+        }
     }
 
     else
@@ -392,6 +442,7 @@ void commandHub(char *aliasArray[11][2], char *systemInput[], char *History[])
     }
 }
 
+//function to execute current directory internal command , takes in any parameters specified by user
 void cd(char *command[])
 {
     if (command[1] != NULL && *command[1] != '~' && command[2] == NULL)
@@ -399,8 +450,7 @@ void cd(char *command[])
         int i = chdir(command[1]);
         if (i < 0)
         {
-            printf("Could not change directory to: %s. Not directory\n",
-                   command[1]);
+            perror(command[1]);
         }
         else
         {
@@ -427,6 +477,7 @@ void cd(char *command[])
     }
 }
 
+//Function to execute getpath internal command , if any arguments are passed in along with getpath command, an error message is printed
 void getpath(char *command[])
 {
 
@@ -436,10 +487,11 @@ void getpath(char *command[])
     }
     else if (strcmp(command[0], "getpath") == 0 && command[1] != NULL)
     {
-        printf("Error: No such path\n");
+        printf("Error: getpath takes no paramters\n");
     }
 }
 
+//Function to execute setpath internal command , takes in any arguments specified for command
 void setpath(char *command[])
 {
     if (strcmp(command[0], "setpath") == 0 && command[1] != NULL && command[2] != NULL)
@@ -458,6 +510,7 @@ void setpath(char *command[])
     }
 }
 
+//function that executes the history internal command  , prints up to the last 20 previous commands , or an error message if there are no commands in history
 void history(char *History[])
 {
     if (!strcmp(History[0], "\0"))
@@ -476,6 +529,7 @@ void history(char *History[])
     }
 }
 
+//Function to execute alias internal command , if successful then it will add the created alias to the alias array
 void alias(char *aliasArray[11][2], char *command[])
 {
     if (command[1] == NULL)
@@ -504,21 +558,21 @@ void alias(char *aliasArray[11][2], char *command[])
 
     if (!strcmp(command[1], "alias"))
     {
-        printf("Error: cannot alias 'alias'");
+        printf("Error: cannot use alias 'alias'");
+        printf("\n");
+        return;
+    }
+
+    if (!strcmp(command[1], "unalias"))
+    {
+        printf("Error: cannot use alias 'unalias'");
         printf("\n");
         return;
     }
 
     char *temp = malloc(MAX);
     strcat(temp, command[2]);
-    for (int i = 0; i < 10; i++)
-    {
-        if (!strcmp(temp, aliasArray[i][0]) && !strcmp(command[1], aliasArray[i][1]))
-        {
-            printf("Cannot create alias, it creates an infinite loop\n");
-            return;
-        }
-    }
+
     int i = 3;
     while (command[i] != NULL)
     {
@@ -529,8 +583,9 @@ void alias(char *aliasArray[11][2], char *command[])
 
     char *aliasName = malloc(MAX);
     char *aliasCommand = malloc(MAX);
-    aliasName = strcat(aliasName, command[1]);
-    aliasCommand = strcat(aliasCommand, temp);
+
+    strcat(aliasName, command[1]);
+    strcat(aliasCommand, temp);
 
     for (int j = 0; j < 10; j++)
     {
@@ -540,7 +595,6 @@ void alias(char *aliasArray[11][2], char *command[])
             strcpy(aliasArray[j][1], aliasCommand);
             printf("Created alias \"%s\" for the command: \"%s\"\n", command[1], aliasCommand);
             Check_Circular(aliasArray, command);
-
             return;
         }
         else if (!strcmp(aliasArray[j][0], aliasName))
@@ -548,32 +602,40 @@ void alias(char *aliasArray[11][2], char *command[])
             printf("Changed alias \"%s\" from the command: \"%s\"\n", command[1], aliasArray[j][1]);
             strcpy(aliasArray[j][1], aliasCommand);
             printf("---to the command: %s\n", aliasCommand);
-
             return;
         }
     }
     printf("Alias list is full\n");
 }
 
+//Function to execute unalias internal command , if successful , it will remove the alias from alias array
 void unalias(char *aliasArray[11][2], char *command[])
 {
-    int j = 0;
-    for (int i = 0; i < 10; i++)
+    if (command[1] == NULL)
     {
-        if (!strcmp(command[1], aliasArray[i][0]))
-        {
-            printf("Unliased command: \"%s\" from alias \"%s\"\n", aliasArray[i][1], command[1]);
-            strcpy(aliasArray[i][0], "\0");
-            strcpy(aliasArray[i][1], "\0");
-            j = 1;
-        }
+        printf("No alias provided\n");
     }
-    if (j == 0)
+    else
     {
-        printf("Alias %s does not exist.\n", command[1]);
+        int j = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            if (!strcmp(command[1], aliasArray[i][0]))
+            {
+                printf("Unliased command: \"%s\" from alias \"%s\"\n", aliasArray[i][1], command[1]);
+                strcpy(aliasArray[i][0], "\0");
+                strcpy(aliasArray[i][1], "\0");
+                j = 1;
+            }
+        }
+        if (j == 0)
+        {
+            printf("Alias %s does not exist.\n", command[1]);
+        }
     }
 }
 
+//Function to execute the !! internal history command
 void lastCommand(char *aliasArray[11][2], char *History[])
 {
 
@@ -606,10 +668,11 @@ void lastCommand(char *aliasArray[11][2], char *History[])
             }
         }
         systemInput[index] = NULL;
-        commandHub(aliasArray, systemInput, History);
+        changeToAliasedCommand(aliasArray, systemInput, History);
     }
 }
 
+//Function to execute the !<no.> internal history command
 void specificCommand(char *aliasArray[11][2], char *command[], char *History[])
 {
 
@@ -617,9 +680,13 @@ void specificCommand(char *aliasArray[11][2], char *command[], char *History[])
     if (value != NULL)
     {
         int x = atoi(value);
-        if (x < 1 || x > 20)
+        if (x == 0)
         {
-            printf("Error : index entered out of range \n");
+            printf("Error: value entered must be an integer value between 1 and 20\n");
+        }
+        else if (x < 1 || x > 20)
+        {
+            printf("Error: index entered out of range\n");
         }
         else
         {
@@ -646,12 +713,13 @@ void specificCommand(char *aliasArray[11][2], char *command[], char *History[])
                     }
                 }
                 systemInput[index] = NULL;
-                commandHub(aliasArray, systemInput, History);
+                changeToAliasedCommand(aliasArray, systemInput, History);
             }
         }
     }
 }
 
+//Function to execute the !-<no.> internal history command
 void relativeCommand(char *aliasArray[11][2], char *command[], char *History[])
 {
 
@@ -659,7 +727,11 @@ void relativeCommand(char *aliasArray[11][2], char *command[], char *History[])
     if (value != NULL)
     {
         int x = atoi(value);
-        if (x < 1 || x > 20)
+        if (x == 0)
+        {
+            printf("Error: value entered must be an integer value between 1 and 20\n");
+        }
+        else if (x < 1 || x > 20)
         {
             printf("Error : index entered out of range \n");
         }
@@ -692,12 +764,13 @@ void relativeCommand(char *aliasArray[11][2], char *command[], char *History[])
                     }
                 }
                 systemInput[index] = NULL;
-                commandHub(aliasArray, systemInput, History);
+                changeToAliasedCommand(aliasArray, systemInput, History);
             }
         }
     }
 }
 
+//function to call and execute an external command via execvp
 void externalCommand(char *command[])
 {
     pid_t c_pid, pid;
@@ -727,6 +800,196 @@ void externalCommand(char *command[])
     }
 }
 
+//function used to determine if the created alias causes a circular dependency , if it does then the alias created is unaliased
+void Check_Circular(char *aliasArray[11][2], char *command[])
+{
+
+    for (int i = 0; i < 10 && (strcmp(aliasArray[i][0], "\0") != 0); i++)
+    {
+        char *To_check = malloc(sizeof(char));
+        strcpy(To_check, aliasArray[i][0]);
+
+        char *Chain_Value = malloc(sizeof(char));
+        strcpy(Chain_Value, aliasArray[i][1]);
+
+        int end_of_chain = 0;
+
+        while (!end_of_chain)
+        {
+            for (int j = 0; j < 10 && (strcmp(aliasArray[j][0], "\0") != 0); j++)
+            {
+
+                if (!strcmp(aliasArray[j][0], Chain_Value))
+                {
+                    if (!strcmp(aliasArray[j][1], To_check))
+                    {
+
+                        printf("Circular dependency detected for %s\n Cancelling alias...\n", To_check);
+                        unalias(aliasArray, command);
+                        free(To_check);
+                        free(Chain_Value);
+                        return;
+                    }
+                    strcpy(Chain_Value, aliasArray[j][1]);
+                }
+            }
+
+            end_of_chain = 1;
+        }
+        free(To_check);
+        free(Chain_Value);
+    }
+}
+
+// this method will change the input command to contain the aliased command
+// if they contain aliases. it will then send the command to the command hub
+// it also detects if the program has ran into
+// a possible infinite loop. it will loop for 500 if it is an infinite loop and come ou
+// of that loop if it reaches 500. it will also inform the user of that
+
+void changeToAliasedCommand(char *aliasArray[11][2], char *systemInput[], char *History[])
+{
+
+    if (!strcmp(systemInput[0], "unalias"))
+    {
+        unalias(aliasArray, systemInput);
+        return;
+    }
+
+    else if (!strcmp(systemInput[0], "alias"))
+    {
+        alias(aliasArray, systemInput);
+        return;
+    }
+
+    int contained = 0;
+    int initialCheck = 0;
+    while (systemInput[initialCheck] != NULL)
+    {
+
+        for (int i = 0; i < 10; i++)
+        {
+            if (!strcmp(systemInput[initialCheck], aliasArray[i][0]))
+            {
+                contained = 1;
+                break;
+            }
+        }
+        initialCheck++;
+    }
+
+    if (contained == 1)
+    {
+        char *holder[50];
+
+        char *systemInputDuplicate[51];
+        int totalSizeOfSystemInput = 0;
+        for (int i = 0; systemInput[i] != NULL; i++)
+        {
+            systemInputDuplicate[i] = systemInput[i];
+            totalSizeOfSystemInput++;
+        }
+        systemInputDuplicate[totalSizeOfSystemInput] = NULL;
+        int index = 0;
+
+        while (systemInputDuplicate[index] != NULL)
+        {
+            int aliasIndex = -1;
+            for (int j = 0; j < 10; j++)
+            {   //redoing first pass incase alias list is jumbled
+                //up
+                for (int i = 0; i < 10; i++)
+                { //first pass
+                    if (strcmp(aliasArray[i][0], "\0"))
+                    {
+                        if (!strcmp(systemInputDuplicate[index], aliasArray[i][0]))
+                        {
+                            systemInputDuplicate[index] = aliasArray[i][1];
+                            aliasIndex = i;
+                        }
+                    }
+                }
+            }
+            if (aliasIndex != -1)
+            {
+                holder[index] = aliasArray[aliasIndex][1];
+            }
+            else
+            {
+                holder[index] = systemInput[index];
+            }
+            index++;
+        }
+
+        char holderArray[MAX];
+        strcpy(holderArray, holder[0]);
+        for (int i = 1; i < index; i++)
+        {
+            strcat(holderArray, " ");
+            strcat(holderArray, holder[i]);
+        }
+        char *newCommandToken = strtok(holderArray, " ");
+        char *newCommand[50];
+        index = 0;
+        while (newCommandToken != NULL)
+        {
+            newCommand[index] = newCommandToken;
+            index++;
+            newCommandToken = strtok(NULL, " ");
+        }
+        newCommand[index] = NULL;
+
+        if (!strcmp(infinitCommand, holderArray))
+        {
+            infinitLoopDetected++;
+        }
+
+        else
+        {
+            strcpy(infinitCommand, holderArray);
+            infinitLoopDetected = 0;
+        }
+
+        if (infinitLoopDetected == 500)
+        {
+            printf("The shell may be stuck on an infinite loop...\n");
+            printf("500 iterations have already been done\n");
+            printf("Exiting loop...\n");
+            infinitLoopDetected = 0;
+        }
+        else
+        {
+            commandHub(aliasArray, newCommand, History);
+            //if newCommand is set to redo the last command, an infinite loop will happen
+            // this is because the last command is the command which called the alias
+            // for example, !-1 should instead be !-2, since calling !-1 will recall this command.
+        }
+    }
+    else
+    {
+
+        commandHub(aliasArray, systemInput, History);
+    }
+    return;
+}
+
+//Function used to determine if the input is an alias in alias array
+int checkIfInAlias(char *aliasArray[11][2], char *systemInput)
+{
+
+    int found = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        if (!strcmp(systemInput, aliasArray[i][0]))
+        {
+            found = 1;
+            break;
+        }
+    }
+    return found;
+}
+
+//function to save the command history to file
 void save_command(char *History[], char *initialDIR)
 {
     FILE *fp;
@@ -753,6 +1016,7 @@ void save_command(char *History[], char *initialDIR)
     }
 }
 
+//function to save the alias array to file
 void save_alias(char *aliasArray[11][2], char *initialDIR)
 {
     FILE *fp;
@@ -779,6 +1043,7 @@ void save_alias(char *aliasArray[11][2], char *initialDIR)
     }
 }
 
+//function used to properly exit shell  ,printing the exit messages ,  freeing up malloc and saving the aliases and command history
 void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, char *History[])
 {
     printf("\nCurrent path: %s\n", getenv("PATH"));
@@ -806,67 +1071,4 @@ void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, cha
     printf("Exiting...\n");
     printf("\n");
     exit(0);
-}
-
-void Check_Circular(char *aliasArray[11][2], char *command[])
-{
-    //for each element of lias 2d array
-    for (int i = 0; i < 10 && (strcmp(aliasArray[i][0], "\0") != 0); i++)
-    {
-        //start of chain with is argument of alias i , chain value is right
-        char *To_check = malloc(sizeof(char));
-        strcpy(To_check, aliasArray[i][0]);
-
-        char *Chain_Value = malloc(sizeof(char));
-        strcpy(Chain_Value, aliasArray[i][1]);
-
-        int end_of_chain = 0;
-
-        while (!end_of_chain)
-        {
-            //searching if chain_value is an alias for To_check
-            for (int j = 0; j < 10 && (strcmp(aliasArray[j][0], "\0") != 0); j++)
-            {
-                //checking if chain value is an alias fo another
-                if (!strcmp(aliasArray[j][0], Chain_Value))
-                {
-                    //if the current chain value is an alias for To_check,then there is a circular dependency
-                    if (!strcmp(aliasArray[j][1], To_check))
-                    {
-                        printf("Circular dependency detected for %s , cancelling alias\n", To_check);
-                        unalias(aliasArray, command);
-                        free(To_check);
-                        free(Chain_Value);
-                        return;
-                    }
-
-                    //if not then set the aliased value as the new Chain_Value
-                    strcpy(Chain_Value, aliasArray[j][1]);
-                }
-            }
-            //if the chain value is not an alias , then its the end of the chain
-
-            end_of_chain = 1;
-        }
-        free(To_check);
-        free(Chain_Value);
-    }
-
-    printf("no circular dependency \n");
-}
-
-char *checkIfInAlias(char *aliasArray[11][2], char *inputToken)
-{
-
-    for (int i = 0; i < 10; i++)
-    {
-        if (strcmp(aliasArray[i][0], "\0") != 0)
-        {
-            if (strcmp(aliasArray[i][0], inputToken) == 0)
-            {
-                return aliasArray[i][1];
-            }
-        }
-    }
-    return inputToken;
 }
