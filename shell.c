@@ -1,16 +1,17 @@
+//Link Section (Import statements)
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
+//Defining constant for mamximum command length , it is at most 512 characters long
 #define MAX 512
 
+//Function Declarations
 void welcome();
 
 void init();
-
-void Check_Circular(char *aliasArray[11][2], char *command[]);
 
 void terminal(char *initialPATH, char *initialDIR);
 
@@ -44,20 +45,30 @@ void specificCommand(char *aliasArray[11][2], char *command[], char *History[]);
 
 void externalCommand(char *command[]);
 
+void Check_Circular(char *aliasArray[11][2], char *command[]);
+
+void changeToAliasedCommand(char *aliasArray[11][2], char *systemInput[], char *History[]);
+
+int checkIfInAlias(char *aliasArray[11][2], char *systemInput);
+
 void save_command(char *History[], char *initialDIR);
 
 void save_alias(char *aliasArray[11][2], char *initialDIR);
 
 void exitShell(char *aliasArray[11][2], char *initialPATH, char *initialDIR, char *History[]);
 
-char *checkIfInAlias(char *aliasArray[11][2], char *inputToken);
+//Global Variables used to detect an infinite loop/command
+int infinitLoopDetected = 0;
+char infinitCommand[MAX] = {'\0'};
 
+//main function , prints welcome message and calls initialiser
 int main(void)
 {
     welcome();
     init();
 }
 
+//prints welcome message
 void welcome()
 {
     printf("------------------\n");
@@ -65,6 +76,7 @@ void welcome()
     printf("------------------\n\n");
 }
 
+//Function to initialise values and calls terminal function to start simple shell
 void init()
 {
     char d[1024];
@@ -83,21 +95,27 @@ void init()
     terminal(initialPATH, initialDIR);
 }
 
+//Function for terminal , initialises values and takes in input
 void terminal(char *initialPATH, char *initialDIR)
 {
+
+    //creates the history and alias arrays
     char *History[21];
     char *aliasArray[11][2];
 
+    //used to determine an empty value
     char *emptyCheck = malloc(1);
 
     strcat(emptyCheck, "\0");
 
+    //malloc for each member of history array , and initialiases the values as being empty
     for (int i = 0; i < 21; i++)
     {
         History[i] = malloc(MAX);
         strcpy(History[i], emptyCheck);
     }
 
+    // do the same process for the 2d alias array
     for (int i = 0; i < 11; i++)
     {
         aliasArray[i][0] = malloc(MAX);
@@ -107,6 +125,7 @@ void terminal(char *initialPATH, char *initialDIR)
         strcpy(aliasArray[i][1], emptyCheck);
     }
 
+    //loads up any existing command history and aliases
     load_commandHistory(initialDIR, History);
     load_Aliases(initialDIR, aliasArray);
 
